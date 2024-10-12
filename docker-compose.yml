@@ -2,7 +2,7 @@ version: '3'
 
 services:
   nginx:
-    build: https://github.com/NCKU-NASA/nasa-judge-frontend
+    build: https://github.com/NCKU-NASA/nasa-judge-frontend.git
     volumes:
     - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -15,7 +15,7 @@ services:
       00-wan:
   backend:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-backend
+      context: https://github.com/NCKU-NASA/nasa-judge-backend.git
       args:
       - CACHE=/root/go/pkg/mod
     depends_on:
@@ -40,7 +40,7 @@ services:
       00-wan:
   judgeapi:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-api
+      context: https://github.com/NCKU-NASA/nasa-judge-api.git
       args:
       - CACHE=/root/go/pkg/mod
     privileged: true
@@ -78,7 +78,7 @@ services:
         ipv4_address: 10.210.0.2
   wireguard:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-wireguard
+      context: https://github.com/NCKU-NASA/nasa-judge-wireguard.git
       args:
       - CACHE=/root/go/pkg/mod
     image: nasa-judge-wireguard
@@ -118,7 +118,7 @@ services:
         ipv4_address: 10.210.0.3
   rootdns:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-named
+      context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
       - CACHE=/root/go/pkg/mod
     image: nasa-judge-named
@@ -151,7 +151,7 @@ services:
         ipv4_address: 10.210.0.4
   tlddns:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-named
+      context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
       - CACHE=/root/go/pkg/mod
     image: nasa-judge-named
@@ -184,7 +184,7 @@ services:
         ipv4_address: 10.210.0.5
   authordns:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-named
+      context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
       - CACHE=/root/go/pkg/mod
     image: nasa-judge-named
@@ -219,7 +219,7 @@ services:
         ipv4_address: 10.210.0.6
   resolver:
     build:
-      context: https://github.com/NCKU-NASA/nasa-judge-named
+      context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
       - CACHE=/root/go/pkg/mod
     image: nasa-judge-named
@@ -253,7 +253,7 @@ services:
         ipv4_address: 10.210.0.7
   ifconfig:
     build:
-      context: https://github.com/NCKU-NASA/SecretWebBackend
+      context: https://github.com/NCKU-NASA/SecretWebBackend.git
     image: nasa-judge-ifconfig
     cap_add:
     - NET_RAW
