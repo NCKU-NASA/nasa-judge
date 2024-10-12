@@ -26,8 +26,6 @@ services:
     - smtp.env
     environment:
     - TZ=Asia/Taipei
-    - URL=https://nasa.chummydns.com
-    - STUDENT_EMAIL_DOMAIN=
     - JUDGE_SCHEME=http
     - JUDGE_HOST=wan-judgeapi
     - JUDGE_PORT=8000
