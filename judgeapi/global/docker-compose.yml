@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  hello_world:
+    image: hello-world:latest
+    networks:
+      net:
+
+networks:
+  net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      config:
+      - subnet: 10.210.255.0/24

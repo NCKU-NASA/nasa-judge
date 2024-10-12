@@ -1,0 +1,15 @@
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     ns1.nasa.taiwan. root.nasa.taiwan. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns1.nasa.taiwan.
+@           IN  A       10.210.0.6
+ns1     IN      A       10.210.0.6
+www     IN      A       10.210.0.6

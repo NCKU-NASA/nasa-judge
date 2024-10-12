@@ -1,0 +1,316 @@
+version: '3'
+
+services:
+  nginx:
+    build: https://github.com/NCKU-NASA/nasa-judge-frontend
+    volumes:
+    - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+    - backend
+    environment:
+    - TZ=Asia/Taipei
+    ports:
+    - 80:80
+    networks:
+      00-wan:
+  backend:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-backend
+      args:
+      - CACHE=/root/go/pkg/mod
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    - smtp.env
+    environment:
+    - TZ=Asia/Taipei
+    - URL=https://nasa.chummydns.com
+    - STUDENT_EMAIL_DOMAIN=
+    - JUDGE_SCHEME=http
+    - JUDGE_HOST=wan-judgeapi
+    - JUDGE_PORT=8000
+    - |
+      USERMODULEAPIS=
+      http://wan-wireguard:8000
+      http://wan-authordns:8000
+    entrypoint: "bash -c 'sleep 5 && ./nasa-judge-backend'"
+    networks:
+      00-wan:
+  judgeapi:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-api
+      args:
+      - CACHE=/root/go/pkg/mod
+    privileged: true
+    volumes:
+    - ./Demo-Judge-Script:/app/labs:ro
+    - ./judgeapi/worker.yml:/app/worker.yml:ro
+    - ./judgeapi/init.sh:/app/init.sh:ro
+    - ./judgeapi/global:/app/global:ro
+    - ./ssh:/root/.ssh:ro
+    depends_on:
+    - db
+    - cache
+    - router
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1", "backend"]
+    - |
+      PUBKEY=
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCiuefBhQ2k6IzrZA5AJei4snTgq44/Sfv9w2nK/qX1uDZGw24JMsDXCRf0/Z0OhtJ9QQK6HjxEOnkhLlryYLlUfkblbanysUv5qyTobezVKDmtfR7QAJrtMIko7NWF8ZWNqEqy4a9MAVbfimciRDNQQ3r8FGejTTi+HJyxnQaZuWHcucDSraefd6rJUh8qcSto3qdcRwkVHYF60vafhKimZZBfwFzIo+V6BeJq62cge5M4xDdFicFk4x1/aNlCIyBQau4eFw6GRrUdg0n7FyuVszHCHuyJlRz4TSPiMmjha1rsWJ/jr84ryMaPwujgvQSQUgNxIAV3MPP1Zw/967Dvovc4t0WGCFDuwUpgRJ9NHFNnA/nYqJhw9XEly7/e3I7L6qY8vVpbGilgN49NCJZ9Ge08+biepJ6UP1Dp/LdOnCpwjjAp7SJcXcfxoWtLp80Syqnlk3b5tMvuligWe+mmbleZSrKZYWN6Jp5jSwwcTO98pE5HNq5YVbtNzredHm8= root@nasajudge
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC56UpkQqAjTLRMT1qWRvLMC+/VfNheyyej6PyVI38I6NCZCN/nV9BHLcFDY7kTZBk/FNisX1TzIY9CvRO+l9ntnlfiTjo6hlotxiqPU8zMm4qf6D8ShfejsuZY6cmKWeMXTgGoZqBHQpmXlFaHXnyVy+pWetxOcyvhSiGV/vXjAvK5jmdF+cHZA4mrSUrFWKEBAP8nY0HCrmEZIV6S3NRTXOUUVO8V9W2kUaWYkQksoI96+/7lV6yfz5VPTzXp+v4B3xifdmxdYfZCmaGweZuE9NpKPRJzUADFYrxpPnI00OOFDZarfVFiCAJYP9nTC7H5WLwNdgFNFJLhTKz/LdU1Dk0Bov9zgWw4vCkyOpnzCphn+iSgtA5MoGCas5rKuOXsEhxBGi3d2SxUw9altqAhcGMh+eHSv4NFp1Sdn24wtLgncZw0A7I59VrfS1l0eatLZ4yf5EvKt9mjHh7TUEZp0p8fb6zg9hYqG54wVeeMV6n6c0ZFqP9nuLD3dxLNjdE= root@nasajudge
+    - WORKERCONFIG=worker.yml
+    - JUDGEURL=http://10.210.0.2:8000
+    - DockerSubnetPool=10.210.254.0/24
+    - DockerPrefix=30
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+        aliases:
+        - wan-judgeapi
+      10-judge:
+        ipv4_address: 10.210.0.2
+  wireguard:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-wireguard
+      args:
+      - CACHE=/root/go/pkg/mod
+    image: nasa-judge-wireguard
+    privileged: true
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    sysctls:
+    - net.ipv4.ip_forward=1
+    - net.ipv4.tcp_l3mdev_accept=1
+    - net.ipv4.udp_l3mdev_accept=1
+    - net.ipv4.raw_l3mdev_accept=0
+    - net.ipv6.conf.all.keep_addr_on_down=1
+    volumes:
+    - ./wireguard/config:/config:ro
+    - ./wireguard/init.sh:/app/init.sh:ro
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1", "backend"]
+    - WGPATH=/etc/wireguard
+    - SERVER=["judge", "debug"]
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    ports:
+    - 30000:30000/udp
+    - 31000:31000/udp
+    networks:
+      00-wan:
+        aliases:
+        - wan-wireguard
+      10-judge:
+        ipv4_address: 10.210.0.3
+  rootdns:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-named
+      args:
+      - CACHE=/root/go/pkg/mod
+    image: nasa-judge-named
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    volumes:
+    - ./rootdns/zone:/zone:ro
+    - ./rootdns/init.sh:/app/init.sh:ro
+    - ./rootdns/named.conf:/etc/bind/named.conf:ro
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1"]
+    - RECORDTMPL=
+    - UPDATEKEY=/etc/bind/rndc.key
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+        aliases:
+        - wan-rootdns
+      10-judge:
+        ipv4_address: 10.210.0.4
+  tlddns:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-named
+      args:
+      - CACHE=/root/go/pkg/mod
+    image: nasa-judge-named
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    volumes:
+    - ./tlddns/zone:/zone:ro
+    - ./tlddns/init.sh:/app/init.sh:ro
+    - ./tlddns/named.conf:/etc/bind/named.conf:ro
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1"]
+    - RECORDTMPL=
+    - UPDATEKEY=/etc/bind/rndc.key
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+        aliases:
+        - wan-tlddns
+      10-judge:
+        ipv4_address: 10.210.0.5
+  authordns:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-named
+      args:
+      - CACHE=/root/go/pkg/mod
+    image: nasa-judge-named
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    volumes:
+    - ./authordns/zone:/zone:ro
+    - ./authordns/init.sh:/app/init.sh:ro
+    - ./authordns/named.conf:/etc/bind/named.conf:ro
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1", "backend"]
+    - |
+      RECORDTMPL=
+      {{ .Username }}.nasa.taiwan A {{ nthnet "10.210.128.0/24" .ID }}
+    - UPDATEKEY=/etc/bind/rndc.key
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+        aliases:
+        - wan-authordns
+      10-judge:
+        ipv4_address: 10.210.0.6
+  resolver:
+    build:
+      context: https://github.com/NCKU-NASA/nasa-judge-named
+      args:
+      - CACHE=/root/go/pkg/mod
+    image: nasa-judge-named
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    volumes:
+    - ./resolver/init.sh:/app/init.sh:ro
+    - ./resolver/flush.sh:/app/flush.sh:ro
+    - ./resolver/named.conf:/etc/bind/named.conf:ro
+    - ./resolver/root.hints:/usr/share/dns/root.hints:ro
+    depends_on:
+    - db
+    - cache
+    env_file:
+    - default.env
+    environment:
+    - TZ=Asia/Taipei
+    - TRUST=["127.0.0.1", "::1"]
+    - RECORDTMPL=
+    - UPDATEKEY=/etc/bind/rndc.key
+    entrypoint: "bash -c 'sleep 5 && ./docker-entrypoint.sh'"
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+        aliases:
+        - wan-resolver
+      10-judge:
+        ipv4_address: 10.210.0.7
+  ifconfig:
+    build:
+      context: https://github.com/NCKU-NASA/SecretWebBackend
+    image: nasa-judge-ifconfig
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    volumes:
+    - ./ifconfig/init.sh:/app/init.sh:ro
+    dns:
+    - 10.210.0.7
+    networks:
+      10-judge:
+        ipv4_address: 10.210.0.8
+  router:
+    build:
+      context: router/.
+    environment:
+    - TZ=Asia/Taipei
+    cap_add:
+    - NET_RAW
+    - NET_ADMIN
+    - SYS_ADMIN
+    sysctls:
+    - net.ipv4.ip_forward=1
+    volumes:
+    - ./router/init.sh:/app/init.sh:ro
+    dns:
+    - 10.210.0.7
+    networks:
+      00-wan:
+      10-judge:
+        ipv4_address: 10.210.0.254
+  db:
+    image: mariadb:latest
+    env_file:
+    - db.env
+    environment:
+    - TZ=Asia/Taipei
+    volumes:
+    - mysql-data:/var/lib/mysql
+    networks:
+      00-wan:
+  cache:
+    image: redis:latest
+    environment:
+    - TZ=Asia/Taipei
+    networks:
+      00-wan:
+
+networks:
+  00-wan:
+    ipam:
+      config:
+      - subnet: 10.200.0.0/24
+  10-judge:
+    ipam:
+      config:
+      - subnet: 10.210.0.0/24
+
+volumes:
+  mysql-data:
