@@ -2,6 +2,8 @@
 
 This is an Online Judge for system and network administration. At the same time, the types of judging are not limited to system and network administration. Instead, profiles can be used to evaluate a variety of information subjects. Assignments, such as programming, compilation systems, computer organization, multi-parallel programming, etc.
 
+[How to use](https://hackmd.io/@Jimmy01240397/Bywp85UNA)
+
 ## Run
 
 1. Clone this repo
