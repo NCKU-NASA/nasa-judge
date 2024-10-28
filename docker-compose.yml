@@ -17,7 +17,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-backend.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     depends_on:
     - db
     - cache
@@ -40,7 +40,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-api.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     privileged: true
     volumes:
     - ./Demo-Judge-Script:/app/labs:ro
@@ -78,7 +78,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-wireguard.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     image: nasa-judge-wireguard
     privileged: true
     cap_add:
@@ -118,7 +118,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     image: nasa-judge-named
     cap_add:
     - NET_RAW
@@ -151,7 +151,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     image: nasa-judge-named
     cap_add:
     - NET_RAW
@@ -184,7 +184,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     image: nasa-judge-named
     cap_add:
     - NET_RAW
@@ -219,7 +219,7 @@ services:
     build:
       context: https://github.com/NCKU-NASA/nasa-judge-named.git
       args:
-      - CACHE=/root/go/pkg/mod
+      - CACHE=${HOME}/go/pkg/mod
     image: nasa-judge-named
     cap_add:
     - NET_RAW
